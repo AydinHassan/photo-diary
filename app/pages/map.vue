@@ -1,27 +1,22 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import L from 'leaflet'
 import 'leaflet/dist/leaflet.css';
 
 const places = ref([])
 
 onMounted(async () => {
-  // fetch your JSON data
-  places.value = await fetch('/places.json').then(r => r.json())
+  const L = await import('leaflet')
+  const map = L.map('map').setView([47.5162, 14.5501], 7)
 
-  // initialize Leaflet map
-  const map = L.map('map').setView([47.5162, 14.5501], 7);
-
-  // add OpenStreetMap tiles
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '&copy; OpenStreetMap contributors'
   }).addTo(map)
 
-  // add pins for each place
-  places.value.forEach(place => {
-    L.marker([place.lat, place.lng])
-      .addTo(map)
-      .bindPopup(`<strong>${place.name}</strong><br>${place.notes}`)
+  const pins = await $fetch('/api/pins')
+
+  pins.forEach(pin => {
+    L.marker([pin.lat, pin.lng]).addTo(map)
+      .bindPopup(pin.name)
   })
 })
 
