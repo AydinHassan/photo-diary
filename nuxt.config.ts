@@ -5,7 +5,11 @@ export default defineNuxtConfig({
     '@nuxt/ui'
   ],
 
-  ssr: false,
+  ssr: true,
+
+  nitro: {
+    preset: 'cloudflare-pages'
+  },
 
   devtools: {
     enabled: true

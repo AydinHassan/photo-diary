@@ -1,0 +1,11 @@
+[
+  {
+    "id": 1,
+    "name": "Lunz am See",
+    "lat": 47.859,
+    "lng": 15.036,
+    "notes": "Morning mist, autumn light",
+    "tags": ["lake", "autumn"],
+    "webcam": "https://example.com/webcam.jpg"
+  }
+]
