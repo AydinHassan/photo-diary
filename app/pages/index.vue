@@ -51,8 +51,6 @@
       }]"
     />
 
-
-
     <UPageSection>
       <UPageCTA
         title="Ready to build your next Nuxt app?"

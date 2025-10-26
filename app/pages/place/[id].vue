@@ -4,6 +4,10 @@ import { upperFirst } from 'scule'
 import { getPaginationRowModel } from '@tanstack/table-core'
 import type { Row } from '@tanstack/table-core'
 
+definePageMeta({
+  middleware: 'auth',
+})
+
 const UButton = resolveComponent('UButton')
 
 const toast = useToast()

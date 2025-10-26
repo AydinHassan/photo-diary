@@ -24,12 +24,12 @@ useSeoMeta({
   twitterCard: 'summary_large_image'
 })
 
-const { loggedIn, user, clear } = useUserSession()
-watch(loggedIn, () => {
-  if (!loggedIn.value) {
-    navigateTo('/login')
-  }
-})
+// const { loggedIn, user, clear } = useUserSession()
+// watch(loggedIn, () => {
+//   if (!loggedIn.value) {
+//     navigateTo('/login')
+//   }
+// })
 
 </script>
 
