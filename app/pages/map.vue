@@ -3,24 +3,34 @@ import { ref, onMounted } from 'vue'
 import 'leaflet/dist/leaflet.css';
 
 const places = ref([])
+const types = ['Not shot yet', 'Favourites', 'Easy', 'Hiking required', 'Quick shoots']
+const type = ref(types[1]);
+const rightClickLatLng = ref(null);
+const map = ref(null);
+
+definePageMeta({
+  middleware: 'auth',
+})
 
 onMounted(async () => {
   const L = await import('leaflet')
-  const map = L.map('map').setView([47.5162, 14.5501], 7)
+  map.value = L.map('map').setView([47.5162, 14.5501], 7)
 
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '&copy; OpenStreetMap contributors'
-  }).addTo(map)
+  }).addTo(map.value)
 
   const pins = await $fetch('/api/pins')
 
   pins.forEach(pin => {
-    L.marker([pin.lat, pin.lng]).addTo(map)
+    L.marker([pin.lat, pin.lng]).addTo(map.value)
       .bindPopup(pin.name)
   })
-})
 
-const { isNotificationsSlideoverOpen } = useDashboard()
+  map.value.on('contextmenu', (e) => {
+    rightClickLatLng.value = e.latlng
+  })
+})
 
 const items = [[{
   label: 'New mail',
@@ -32,35 +42,52 @@ const items = [[{
   to: '/customers'
 }]] satisfies DropdownMenuItem[][]
 
-// const range = shallowRef<Range>({
-//   start: sub(new Date(), { days: 14 }),
-//   end: new Date()
-// })
-// const period = ref<Period>('daily')
+const contextItems = ref([
+  [
+    {
+      label: 'Add new place',
+      icon: 'i-lucide-circle-plus',
+      onSelect: () => {
+        const latlng = rightClickLatLng.value
+
+        L.marker([latlng.lat, latlng.lng]).addTo(map.value)
+          .bindPopup('Test')
+      }
+    }
+  ],
+  [
+    {
+      label: 'Show Sidebar',
+      kbds: ['meta', 's']
+    },
+    {
+      label: 'Show Toolbar',
+      kbds: ['shift', 'meta', 'd']
+    },
+  ],
+  [
+    {
+      label: 'Refresh the Page'
+    },
+    {
+      label: 'Clear Cookies and Refresh'
+    },
+    {
+      label: 'Clear Cache and Refresh'
+    },
+  ]
+])
 </script>
 
 <template>
   <UDashboardPanel id="map">
     <template #header>
-      <UDashboardNavbar title="Home" :ui="{ right: 'gap-3' }">
+      <UDashboardNavbar title="Map" :ui="{ right: 'gap-3' }">
         <template #leading>
           <UDashboardSidebarCollapse />
         </template>
 
         <template #right>
-          <UTooltip text="Notifications" :shortcuts="['N']">
-            <UButton
-              color="neutral"
-              variant="ghost"
-              square
-              @click="isNotificationsSlideoverOpen = true"
-            >
-              <UChip color="error" inset>
-                <UIcon name="i-lucide-bell" class="size-5 shrink-0" />
-              </UChip>
-            </UButton>
-          </UTooltip>
-
           <UDropdownMenu :items="items">
             <UButton icon="i-lucide-plus" size="md" class="rounded-full" />
           </UDropdownMenu>
@@ -69,20 +96,21 @@ const items = [[{
 
       <UDashboardToolbar>
         <template #left>
-          <!-- NOTE: The `-ms-1` class is used to align with the `DashboardSidebarCollapse` button here. -->
-<!--          <HomeDateRangePicker v-model="range" class="-ms-1" />-->
-
-<!--          <HomePeriodSelect v-model="period" :range="range" />-->
+          <USelect
+            v-model="type"
+            :items="types"
+            variant="ghost"
+            class="-ms-1 data-[state=open]:bg-elevated w-[200px]"
+            :ui="{ value: 'capitalize', itemLabel: 'capitalize', trailingIcon: 'group-data-[state=open]:rotate-180 transition-transform duration-200' }"
+          />
         </template>
       </UDashboardToolbar>
     </template>
 
     <template #body>
-<!--      <HomeStats :period="period" :range="range" />-->
-<!--      <HomeChart :period="period" :range="range" />-->
-<!--      <HomeSales :period="period" :range="range" />-->
-
+      <UContextMenu :items="contextItems">
         <div id="map" class="w-full h-full"></div>
+      </UContextMenu>
     </template>
   </UDashboardPanel>
 </template>

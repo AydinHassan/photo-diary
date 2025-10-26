@@ -23,6 +23,14 @@ useSeoMeta({
   twitterImage: 'https://ui.nuxt.com/assets/templates/nuxt/starter-light.png',
   twitterCard: 'summary_large_image'
 })
+
+const { loggedIn, user, clear } = useUserSession()
+watch(loggedIn, () => {
+  if (!loggedIn.value) {
+    navigateTo('/login')
+  }
+})
+
 </script>
 
 <template>

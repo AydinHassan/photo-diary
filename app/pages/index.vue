@@ -51,6 +51,8 @@
       }]"
     />
 
+
+
     <UPageSection>
       <UPageCTA
         title="Ready to build your next Nuxt app?"
@@ -74,3 +76,8 @@
     </UPageSection>
   </div>
 </template>
+<script setup lang="ts">
+definePageMeta({
+  middleware: 'auth',
+})
+</script>
