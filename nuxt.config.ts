@@ -24,7 +24,7 @@ export default defineNuxtConfig({
   css: ['~/assets/css/main.css', 'leaflet/dist/leaflet.css'],
 
   routeRules: {
-    '/': { prerender: true }
+    '/': { prerender: false }
   },
 
   compatibilityDate: '2025-01-15',
