@@ -1,5 +1,7 @@
 CREATE TABLE `places` (
 	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
+  `user_id` text NOT NULL,
+  `provider` text NOT NULL,
 	`name` text NOT NULL,
 	`description` text,
 	`tags` text DEFAULT '[]' NOT NULL,
