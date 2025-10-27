@@ -167,7 +167,7 @@ const pagination = ref({
         </template>
 
         <template #right>
-          <UButton label="New place" icon="i-lucide-plus" />
+          <UButton to="/place/add" label="New place" icon="i-lucide-plus" />
         </template>
       </UDashboardNavbar>
     </template>

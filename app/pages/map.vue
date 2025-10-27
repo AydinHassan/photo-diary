@@ -7,10 +7,41 @@ const types = ['Not shot yet', 'Favourites', 'Easy', 'Hiking required', 'Quick s
 const type = ref(types[1]);
 const rightClickLatLng = ref(null);
 const map = ref(null);
+const selectedPlace = ref(null);
+const placeModalOpen = ref(false);
+const route = useRoute()
+const router = useRouter()
 
 definePageMeta({
   middleware: 'auth',
 })
+
+const defaultView = { center: [47.5162, 14.55], zoom: 7 }
+
+const targetView = computed(() => {
+  const lat = parseFloat(route.query.lat)
+  const lng = parseFloat(route.query.lng)
+  if (isNaN(lat) || isNaN(lng)) {
+    return defaultView
+  }
+  return { center: [lat, lng], zoom: 13 }
+})
+
+watch(
+  [map, targetView],
+  ([map, view]) => {
+    if (!map) {
+      return
+    }
+    map.setView(view.center, view.zoom)
+  },
+  { immediate: true }
+)
+
+function resetMap() {
+  router.replace({ path: route.path, query: {} })
+}
+const mails = []
 
 onMounted(async () => {
   const L = await import('leaflet')
@@ -20,11 +51,16 @@ onMounted(async () => {
     attribution: '&copy; OpenStreetMap contributors'
   }).addTo(map.value)
 
-  const pins = await $fetch('/api/pins')
+  const places = await $fetch('/api/places')
 
-  pins.forEach(pin => {
-    L.marker([pin.lat, pin.lng]).addTo(map.value)
-      .bindPopup(pin.name)
+  places.forEach(function (place) {
+    if (place.lat && place.lng) {
+      let marker = L.marker([place.lat, place.lng]).addTo(map.value);
+      marker.on('click', () => {
+        selectedPlace.value = place;
+        placeModalOpen.value = true;
+      })
+    }
   })
 
   map.value.on('contextmenu', (e) => {
@@ -33,9 +69,9 @@ onMounted(async () => {
 })
 
 const items = [[{
-  label: 'New mail',
+  label: 'Add place',
   icon: 'i-lucide-send',
-  to: '/inbox'
+  to: '/place/add'
 }, {
   label: 'New customer',
   icon: 'i-lucide-user-plus',
@@ -50,8 +86,10 @@ const contextItems = ref([
       onSelect: () => {
         const latlng = rightClickLatLng.value
 
-        L.marker([latlng.lat, latlng.lng]).addTo(map.value)
-          .bindPopup('Test')
+        navigateTo({
+          path: '/place/add',
+          query: { lat: latlng.lat, lng: latlng.lng },
+        })
       }
     }
   ],
@@ -77,17 +115,44 @@ const contextItems = ref([
     },
   ]
 ])
+
+const closeSelectedPlace = () => {
+  selectedPlace.value = null;
+}
 </script>
 
 <template>
-  <UDashboardPanel id="map">
+  <UDashboardPanel v-if="selectedPlace !== null" id="map"
+                   :default-size="20"
+                   :min-size="10"
+                   :max-size="30"
+                    resizable>
     <template #header>
-      <UDashboardNavbar title="Map" :ui="{ right: 'gap-3' }">
+      <UDashboardNavbar :title="selectedPlace?.name ?? null" :ui="{ right: 'gap-3' }">
         <template #leading>
           <UDashboardSidebarCollapse />
         </template>
-
         <template #right>
+          <UButton :on-click="closeSelectedPlace" icon="i-lucide-x" size="md" class="rounded-full" />
+        </template>
+      </UDashboardNavbar>
+    </template>
+    <template #body>
+      <p class="text-sm">{{selectedPlace.description}}</p>
+      <UButton :to="`/place/${selectedPlace.id}`">View place</UButton>
+      <div class="flex gap-2 flex-wrap">
+        <UBadge v-for="tag in selectedPlace.tags" size="md" color="success" variant="outline">{{ tag }}</UBadge>
+      </div>
+    </template>
+  </UDashboardPanel>
+  <UDashboardPanel>
+    <template #header>
+      <UDashboardNavbar title="Map" :ui="{ right: 'gap-3' }">
+        <template #leading>
+          <UDashboardSidebarCollapse v-if="selectedPlace === null"/>
+        </template>
+        <template #right>
+          <UButton :on-click="resetMap" label="Reset zoom" icon="i-lucide-map" />
           <UDropdownMenu :items="items">
             <UButton icon="i-lucide-plus" size="md" class="rounded-full" />
           </UDropdownMenu>
@@ -106,7 +171,6 @@ const contextItems = ref([
         </template>
       </UDashboardToolbar>
     </template>
-
     <template #body>
       <UContextMenu :items="contextItems">
         <div id="map" class="w-full h-full"></div>

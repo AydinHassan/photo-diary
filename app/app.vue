@@ -11,8 +11,8 @@ useHead({
   }
 })
 
-const title = 'Nuxt Starter Template'
-const description = 'A production-ready starter template powered by Nuxt UI. Build beautiful, accessible, and performant applications in minutes, not hours.'
+const title = 'Photo Diary'
+const description = 'An app to log your photography locations and ideas'
 
 useSeoMeta({
   title,
@@ -24,12 +24,12 @@ useSeoMeta({
   twitterCard: 'summary_large_image'
 })
 
-// const { loggedIn, user, clear } = useUserSession()
-// watch(loggedIn, () => {
-//   if (!loggedIn.value) {
-//     navigateTo('/login')
-//   }
-// })
+const { loggedIn, user, clear } = useUserSession()
+watch(loggedIn, () => {
+  if (!loggedIn.value) {
+    navigateTo('/login')
+  }
+})
 
 </script>
 
