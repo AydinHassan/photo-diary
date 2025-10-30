@@ -43,6 +43,8 @@ function resetMap() {
 }
 const mails = []
 
+let activeMarker = ref(null);
+
 onMounted(async () => {
   const L = await import('leaflet')
   map.value = L.map('map').setView([47.5162, 14.5501], 7)
@@ -51,14 +53,29 @@ onMounted(async () => {
     attribution: '&copy; OpenStreetMap contributors'
   }).addTo(map.value)
 
+  const pinIcon =  L.divIcon({
+    html: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"  fill="currentColor">\n' +
+      '  <path fill-rule="evenodd" d="m11.54 22.351.07.04.028.016a.76.76 0 0 0 .723 0l.028-.015.071-.041a16.975 16.975 0 0 0 1.144-.742 19.58 19.58 0 0 0 2.683-2.282c1.944-1.99 3.963-4.98 3.963-8.827a8.25 8.25 0 0 0-16.5 0c0 3.846 2.02 6.837 3.963 8.827a19.58 19.58 0 0 0 2.682 2.282 16.975 16.975 0 0 0 1.145.742ZM12 13.5a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" clip-rule="evenodd" />\n' +
+      '</svg>',
+    iconSize: [35, 35],
+    className: 'text-slate-700'
+  });
+
   const places = await $fetch('/api/places')
 
   places.forEach(function (place) {
     if (place.lat && place.lng) {
-      let marker = L.marker([place.lat, place.lng]).addTo(map.value);
+
+      let marker = L.marker([place.lat, place.lng], {icon: pinIcon}).addTo(map.value);
       marker.on('click', () => {
+        if (activeMarker.value) {
+          activeMarker.value.getElement()?.classList.replace('text-green-500', 'text-slate-700')
+        }
+
+        activeMarker.value = marker;
         selectedPlace.value = place;
         placeModalOpen.value = true;
+        marker.getElement()?.classList.replace('text-slate-700', 'text-green-500')
       })
     }
   })
@@ -117,6 +134,8 @@ const contextItems = ref([
 ])
 
 const closeSelectedPlace = () => {
+  activeMarker.value.getElement()?.classList.replace('text-green-500', 'text-slate-700')
+
   selectedPlace.value = null;
 }
 </script>
