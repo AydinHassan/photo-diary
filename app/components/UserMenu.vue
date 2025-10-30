@@ -15,10 +15,10 @@ const colors = ['red', 'orange', 'amber', 'yellow', 'lime', 'green', 'emerald', 
 const neutrals = ['slate', 'gray', 'zinc', 'neutral', 'stone']
 
 const userInfo = ref({
-  name: user.value.name,
+  name: user.value.name ?? user.value.login,
   avatar: {
     src: user.value.profilePic,
-    alt: user.value.name
+    alt: user.value.login ?? user.value.login
   }
 })
 
@@ -127,7 +127,6 @@ const items = computed<DropdownMenuItem[][]>(() => ([[{
     :content="{ align: 'center', collisionPadding: 12 }"
     :ui="{ content: collapsed ? 'w-48' : 'w-(--reka-dropdown-menu-trigger-width)' }"
   >
-
       <UButton
         v-if="loggedIn"
         v-bind="{
