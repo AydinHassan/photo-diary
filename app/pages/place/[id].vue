@@ -74,7 +74,7 @@ const highlightPlace = useState('highlightPlace', () => null)
 
         <template #right>
           <UButton :to="`/map?lat=${place.lat}&lng=${place.lng}`" label="View on map" icon="i-lucide-map" />
-          <UButton label="New place" icon="i-lucide-plus" />
+          <UButton to="/place/add" label="Add new place" icon="i-lucide-plus" />
         </template>
       </UDashboardNavbar>
     </template>
