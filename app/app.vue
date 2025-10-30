@@ -31,10 +31,12 @@ watch(loggedIn, () => {
   }
 })
 
+const toaster = { position: 'top-center' }
+
 </script>
 
 <template>
-  <UApp>
+  <UApp :toaster="toaster">
     <NuxtLoadingIndicator />
 
     <NuxtLayout>
