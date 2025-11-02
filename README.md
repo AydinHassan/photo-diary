@@ -58,3 +58,20 @@ pnpm preview
 ```
 
 Check out the [deployment documentation](https://nuxt.com/docs/getting-started/deployment) for more information.
+
+
+TODO:
+- [x] Delete places
+- [] Fix reset zoom when manually zooming map
+- [x] Better pin on map/selected pin styling
+- [] Filter map by tags
+- [] Filter place list by tabs
+- [] Image upload
+- [x] GitHub name fallback
+- [x] Notifications top middle
+- [] Googlemap search
+- [] Sat view
+- [] fix table list descriptions width
+- [x] delete from map
+- [] view on googlemaps button
+- [] Add directly on map

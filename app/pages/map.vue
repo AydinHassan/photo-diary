@@ -2,7 +2,7 @@
 import { ref, onMounted } from 'vue'
 import 'leaflet/dist/leaflet.css';
 
-const places = ref([])
+const places = ref<Place[]>([])
 const types = ['Not shot yet', 'Favourites', 'Easy', 'Hiking required', 'Quick shoots']
 const type = ref(types[1]);
 const rightClickLatLng = ref(null);
@@ -11,6 +11,7 @@ const selectedPlace = ref(null);
 const placeModalOpen = ref(false);
 const route = useRoute()
 const router = useRouter()
+const { deletePlace } = useDeletePlace();
 
 definePageMeta({
   middleware: 'auth',
@@ -44,10 +45,12 @@ function resetMap() {
 const mails = []
 
 let activeMarker = ref(null);
+const markers = new Map<number, L.Marker>()
 
 onMounted(async () => {
   const L = await import('leaflet')
-  map.value = L.map('map').setView([47.5162, 14.5501], 7)
+  map.value = L.map('map')//.setView([47.5162, 14.5501], 7)
+  map.value.locate({setView: true, maxZoom: 16});
 
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '&copy; OpenStreetMap contributors'
@@ -61,22 +64,33 @@ onMounted(async () => {
     className: 'text-slate-700'
   });
 
-  const places = await $fetch('/api/places')
+  places.value = await $fetch('/api/places')
 
-  places.forEach(function (place) {
-    if (place.lat && place.lng) {
+  watchEffect(() => {
+    for (const place of places.value) {
+      if (!place.lat || !place.lng) continue
+      if (markers.has(place.id)) continue
 
-      let marker = L.marker([place.lat, place.lng], {icon: pinIcon}).addTo(map.value);
+      const marker = L.marker([place.lat, place.lng], { icon: pinIcon }).addTo(map.value)
+      markers.set(place.id, marker)
+
       marker.on('click', () => {
         if (activeMarker.value) {
           activeMarker.value.getElement()?.classList.replace('text-green-500', 'text-slate-700')
         }
-
-        activeMarker.value = marker;
-        selectedPlace.value = place;
-        placeModalOpen.value = true;
+        activeMarker.value = marker
+        selectedPlace.value = place
+        placeModalOpen.value = true
         marker.getElement()?.classList.replace('text-slate-700', 'text-green-500')
       })
+    }
+
+    // remove markers for deleted places
+    for (const [id, marker] of markers.entries()) {
+      if (!places.value.find(p => p.id === id)) {
+        marker.remove()
+        markers.delete(id)
+      }
     }
   })
 
@@ -138,6 +152,17 @@ const closeSelectedPlace = () => {
 
   selectedPlace.value = null;
 }
+
+const deleteClick = () => {
+  deletePlace({
+    id: selectedPlace.value.id,
+    onDeleted: () => {
+      places.value = places.value?.filter(p => p.id !== selectedPlace.value.id)
+
+      selectedPlace.value = null;
+    }
+  });
+}
 </script>
 
 <template>
@@ -157,8 +182,12 @@ const closeSelectedPlace = () => {
       </UDashboardNavbar>
     </template>
     <template #body>
+
+      <div class="grid grid-cols-2 gap-2">
+        <UButton size="sm" icon="i-lucide-pencil" variant="outline" :to="`/place/${selectedPlace.id}`">View place</UButton>
+        <UButton size="sm" icon="i-lucide-trash-2" color="error" :on-click="deleteClick">Delete</UButton>
+      </div>
       <p class="text-sm">{{selectedPlace.description}}</p>
-      <UButton :to="`/place/${selectedPlace.id}`">View place</UButton>
       <div class="flex gap-2 flex-wrap">
         <UBadge v-for="tag in selectedPlace.tags" size="md" color="success" variant="outline">{{ tag }}</UBadge>
       </div>

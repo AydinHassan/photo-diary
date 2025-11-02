@@ -18,6 +18,7 @@ const toast = useToast()
 const table = useTemplateRef('table')
 
 const rowSelection = ref({})
+const { deletePlace } = useDeletePlace()
 
 interface Place {
   id: number
@@ -45,6 +46,11 @@ function getRowItems(row: Row<Place>) {
       onSelect: () => navigateTo('/place/' + row.original.id)
     },
     {
+      label: 'View on map',
+      icon: 'i-lucide-map',
+      onSelect: () => navigateTo(`/map?lat=${row.original.lat}&lng=${row.original.lng})}`)
+    },
+    {
       type: 'separator'
     },
     {
@@ -52,11 +58,13 @@ function getRowItems(row: Row<Place>) {
       icon: 'i-lucide-trash',
       color: 'error',
       onSelect() {
-        toast.add({
-          title: 'place deleted',
-          description: 'The place has been deleted.'
-        })
-      }
+        deletePlace({
+          id: row.original.id,
+          onDeleted: () => {
+            data.value = data.value?.filter(p => p.id !== row.original.id)
+          }
+        });
+      },
     }
   ]
 }

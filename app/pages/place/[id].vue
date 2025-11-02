@@ -15,6 +15,7 @@ const UButton = resolveComponent('UButton')
 const toast = useToast()
 
 const route = useRoute()
+const { deletePlace } = useDeletePlace();
 
 const { data: place, status } = await useFetch<Place>('/api/place/' + route.params.id , {
 })
@@ -62,6 +63,15 @@ async function onSubmit(event: FormSubmitEvent<PlaceSchema>) {
 
 const formErrors = ref<{ name: string; message: string }[]>([])
 const highlightPlace = useState('highlightPlace', () => null)
+
+const deleteClick = () => {
+  deletePlace({
+    id: place.id,
+    onDeleted: () => {
+      navigateTo('/places')
+    }
+  });
+}
 </script>
 
 <template>
@@ -75,6 +85,7 @@ const highlightPlace = useState('highlightPlace', () => null)
         <template #right>
           <UButton :to="`/map?lat=${place.lat}&lng=${place.lng}`" label="View on map" icon="i-lucide-map" />
           <UButton to="/place/add" label="Add new place" icon="i-lucide-plus" />
+          <UButton :to="`/map?lat=${place.lat}&lng=${place.lng}`" color="error" label="Delete" icon="i-lucide-trash-2" :on-click="deleteClick" />
         </template>
       </UDashboardNavbar>
     </template>

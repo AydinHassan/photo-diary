@@ -38,6 +38,7 @@ const toaster = { position: 'top-center' }
 <template>
   <UApp :toaster="toaster">
     <NuxtLoadingIndicator />
+    <ConfirmDialog />
 
     <NuxtLayout>
       <NuxtPage />
