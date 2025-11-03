@@ -35,9 +35,9 @@ const { data, status } = await useFetch<Place[]>('/api/places', {
 })
 
 function getRowItems(row: Row<Place>) {
-  const items = [
+  return [
     {
-      type: 'label' as const,
+      type: 'label',
       label: 'Actions'
     },
     {
@@ -48,20 +48,10 @@ function getRowItems(row: Row<Place>) {
     {
       label: 'View on map',
       icon: 'i-lucide-map',
-      onSelect: () => navigateTo(`/map?lat=${row.original.lat}&lng=${row.original.lng}`)
+      onSelect: () => navigateTo(`/map?lat=${row.original.lat}&lng=${row.original.lng})}`)
     },
-    ...(row.original.lat && row.original.lng ? [
-      {
-        label: 'View on Google Maps',
-        icon: 'i-lucide-map-pin',
-        onSelect: () => {
-          const url = `https://www.google.com/maps/search/?api=1&query=${row.original.lat},${row.original.lng}`
-          window.open(url, '_blank')
-        }
-      } as const
-    ] : []),
     {
-      type: 'separator' as const
+      type: 'separator'
     },
     {
       label: 'Delete place',
@@ -77,7 +67,6 @@ function getRowItems(row: Row<Place>) {
       },
     }
   ]
-  return items
 }
 
 const columns: TableColumn<Place>[] = [
@@ -113,14 +102,14 @@ const columns: TableColumn<Place>[] = [
   {
     accessorKey: 'description',
     header: ({ column }) => {
-
       return h(UButton, {
         color: 'neutral',
         variant: 'ghost',
         label: 'Description',
         class: '-mx-2.5',
       })
-    }
+    },
+    meta: {class: {td: 'max-w-sm overflow-hidden'}}
   },
   {
     accessorKey: 'tags',

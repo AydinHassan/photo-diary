@@ -71,7 +71,7 @@ TODO:
 - [x] Notifications top middle
 - [] Googlemap search
 - [] Sat view
-- [] fix table list descriptions width
+- [x] fix table list descriptions width
 - [x] delete from map
-- [] view on googlemaps button
+- [x] view on googlemaps button
 - [] Add directly on map
