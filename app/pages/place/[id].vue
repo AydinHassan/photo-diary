@@ -83,9 +83,10 @@ const deleteClick = () => {
         </template>
 
         <template #right>
-          <UButton :to="`/map?lat=${place.lat}&lng=${place.lng}`" label="View on map" icon="i-lucide-map" />
+          <UButton v-if="place?.lat && place?.lng" :to="`/map?lat=${place.lat}&lng=${place.lng}`" label="View on map" icon="i-lucide-map" />
+          <UButton v-if="place?.lat && place?.lng" :on-click="() => window.open(`https://www.google.com/maps/search/?api=1&query=${place.lat},${place.lng}`, '_blank')" label="View on Google Maps" icon="i-lucide-map-pin" />
           <UButton to="/place/add" label="Add new place" icon="i-lucide-plus" />
-          <UButton :to="`/map?lat=${place.lat}&lng=${place.lng}`" color="error" label="Delete" icon="i-lucide-trash-2" :on-click="deleteClick" />
+          <UButton color="error" label="Delete" icon="i-lucide-trash-2" :on-click="deleteClick" />
         </template>
       </UDashboardNavbar>
     </template>

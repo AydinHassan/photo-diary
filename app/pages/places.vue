@@ -35,9 +35,9 @@ const { data, status } = await useFetch<Place[]>('/api/places', {
 })
 
 function getRowItems(row: Row<Place>) {
-  return [
+  const items = [
     {
-      type: 'label',
+      type: 'label' as const,
       label: 'Actions'
     },
     {
@@ -48,10 +48,20 @@ function getRowItems(row: Row<Place>) {
     {
       label: 'View on map',
       icon: 'i-lucide-map',
-      onSelect: () => navigateTo(`/map?lat=${row.original.lat}&lng=${row.original.lng})}`)
+      onSelect: () => navigateTo(`/map?lat=${row.original.lat}&lng=${row.original.lng}`)
     },
+    ...(row.original.lat && row.original.lng ? [
+      {
+        label: 'View on Google Maps',
+        icon: 'i-lucide-map-pin',
+        onSelect: () => {
+          const url = `https://www.google.com/maps/search/?api=1&query=${row.original.lat},${row.original.lng}`
+          window.open(url, '_blank')
+        }
+      } as const
+    ] : []),
     {
-      type: 'separator'
+      type: 'separator' as const
     },
     {
       label: 'Delete place',
@@ -67,6 +77,7 @@ function getRowItems(row: Row<Place>) {
       },
     }
   ]
+  return items
 }
 
 const columns: TableColumn<Place>[] = [

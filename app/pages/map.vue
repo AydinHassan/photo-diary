@@ -147,6 +147,30 @@ const contextItems = ref([
   ]
 ])
 
+const placeActions = [
+    {
+      label: 'View place',
+      icon: 'i-lucide-pencil',
+      onSelect: () => {
+        navigateTo(`/place/${selectedPlace.value.id}`)
+      }
+    },
+    {
+      label: 'View on Google Maps',
+      icon: 'i-lucide-map',
+      target: '_blank',
+      onSelect: () => {
+        navigateTo(`https://www.google.com/maps/search/?api=1&query=${selectedPlace.value.lat},${selectedPlace.value.lng}`, { external: true, open: {target:"_blank"} })
+      }
+    },
+    {
+      label: 'Delete',
+      icon: 'i-lucide-trash-2',
+      color: 'red',
+      onSelect: () => deleteClick()
+    }
+  ];
+
 const closeSelectedPlace = () => {
   activeMarker.value.getElement()?.classList.replace('text-green-500', 'text-slate-700')
 
@@ -182,15 +206,19 @@ const deleteClick = () => {
       </UDashboardNavbar>
     </template>
     <template #body>
-
-      <div class="grid grid-cols-2 gap-2">
-        <UButton size="sm" icon="i-lucide-pencil" variant="outline" :to="`/place/${selectedPlace.id}`">View place</UButton>
-        <UButton size="sm" icon="i-lucide-trash-2" color="error" :on-click="deleteClick">Delete</UButton>
-      </div>
       <p class="text-sm">{{selectedPlace.description}}</p>
+
       <div class="flex gap-2 flex-wrap">
         <UBadge v-for="tag in selectedPlace.tags" size="md" color="success" variant="outline">{{ tag }}</UBadge>
       </div>
+
+      <UNavigationMenu
+        variant="pill"
+        :items="placeActions"
+        orientation="vertical"
+        tooltip
+        popover
+      />
     </template>
   </UDashboardPanel>
   <UDashboardPanel>
