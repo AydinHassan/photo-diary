@@ -78,5 +78,5 @@ TODO:
 - [x] delete from map
 - [x] view on googlemaps button
 - [x] Add directly on map
-- [] Cloudflare images
+- [x] Cloudflare images
 - [] Place action dropdown
