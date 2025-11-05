@@ -79,5 +79,5 @@ TODO:
 - [x] view on googlemaps button
 - [x] Add directly on map
 - [x] Cloudflare images
-- [] Place action dropdown
-- [] Remove home
+- [x] Place action dropdown
+- [x] Remove home

@@ -62,7 +62,6 @@ async function onSubmit(event: FormSubmitEvent<PlaceSchema>) {
 }
 
 const formErrors = ref<{ name: string; message: string }[]>([])
-const highlightPlace = useState('highlightPlace', () => null)
 
 const deleteClick = () => {
   deletePlace({
@@ -129,6 +128,39 @@ async function uploadFile(item) {
   xhr.send(form)
 }
 
+
+const items = ref<DropdownMenuItem[]>([
+  [
+    {
+      label: 'View on map',
+      icon: 'i-lucide-map',
+      to: `/?lat=${place.lat}&lng=${place.lng}`
+    },
+    {
+      label: 'View on Google Maps',
+      icon: 'i-lucide-map-pin',
+      to: `https://www.google.com/maps/search/?api=1&query=${place.lat},${place.lng}`,
+      target: '_blank'
+    }
+  ],
+  [
+    {
+      color: "success",
+      label: 'Add new place',
+      icon: 'i-lucide-plus',
+      to: '/place/add'
+    }
+  ],
+  [
+    {
+      color: "error",
+      label: 'Delete',
+      icon: 'i-lucide-trash-2',
+      onSelect: () => deleteClick()
+    },
+  ]
+
+])
 </script>
 
 <template>
@@ -140,10 +172,9 @@ async function uploadFile(item) {
         </template>
 
         <template #right>
-          <UButton v-if="place?.lat && place?.lng" :to="`/?lat=${place.lat}&lng=${place.lng}`" label="View on map" icon="i-lucide-map" />
-          <UButton v-if="place?.lat && place?.lng" :on-click="() => window.open(`https://www.google.com/maps/search/?api=1&query=${place.lat},${place.lng}`, '_blank')" label="View on Google Maps" icon="i-lucide-map-pin" />
-          <UButton to="/place/add" label="Add new place" icon="i-lucide-plus" />
-          <UButton color="error" label="Delete" icon="i-lucide-trash-2" :on-click="deleteClick" />
+          <UDropdownMenu :items="items">
+            <UButton icon="i-lucide-menu" color="neutral" variant="outline" />
+          </UDropdownMenu>
         </template>
       </UDashboardNavbar>
     </template>
