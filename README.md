@@ -80,3 +80,4 @@ TODO:
 - [x] Add directly on map
 - [x] Cloudflare images
 - [] Place action dropdown
+- [] Remove home

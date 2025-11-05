@@ -51,7 +51,7 @@ function getRowItems(row: Row<Place>) {
     {
       label: 'View on map',
       icon: 'i-lucide-map',
-      onSelect: () => navigateTo(`/map?lat=${row.original.lat}&lng=${row.original.lng}`)
+      onSelect: () => navigateTo(`/?lat=${row.original.lat}&lng=${row.original.lng}`)
     },
     {
       type: 'separator'
