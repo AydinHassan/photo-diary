@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import 'leaflet/dist/leaflet.css';
+import {type PlaceSchema, placeSchema} from "~/shared/validation/place";
 
 const places = ref<Place[]>([])
 const types = ['All', 'Not shot yet', 'Favourites', 'Easy', 'Hiking required', 'Quick shoots']
@@ -12,6 +13,9 @@ const placeModalOpen = ref(false);
 const route = useRoute()
 const router = useRouter()
 const { deletePlace } = useDeletePlace();
+const tags = ['Not shot yet', 'Favourites', 'Easy', 'Hiking required', 'Quick shoots']
+const form = useTemplateRef('form')
+const toast = useToast()
 
 definePageMeta({
   middleware: 'auth',
@@ -121,18 +125,50 @@ const items = [[{
   to: '/customers'
 }]] satisfies DropdownMenuItem[][]
 
+const addPlaceModalOpen = ref(false)
+const addPlaceSubmitting = ref(false)
+
+const state = reactive<Partial<PlaceSchema>>({
+  name: '',
+  description: '',
+  tags: [] as string[],
+})
+
+async function onSubmit(event: FormSubmitEvent<PlaceSchema>) {
+  try {
+    const result = await $fetch('/api/place', {
+      method: 'POST',
+      body: event.data,
+      throw: true
+    })
+
+    places.value = await $fetch('/api/places');
+    selectedPlace.value = places.value.find(p => p.id === result.id)
+
+    toast.add({ title: 'Success', description: 'The place was added', color: 'success' })
+    addPlaceModalOpen.value = false
+
+    state.name = '';
+    state.description = '';
+    state.tags = [];
+  } catch (error) {
+    toast.add({ title: 'Failed', description: 'Error adding' + error, color: 'error' })
+  } finally {
+    addPlaceSubmitting.value = false
+  }
+}
+
 const contextItems = ref([
   [
     {
       label: 'Add new place',
       icon: 'i-lucide-circle-plus',
       onSelect: () => {
-        const latlng = rightClickLatLng.value
+        if (!rightClickLatLng.value) return
+        addPlaceModalOpen.value = true
 
-        navigateTo({
-          path: '/place/add',
-          query: { lat: latlng.lat, lng: latlng.lng },
-        })
+        state.lat = rightClickLatLng.value.lat
+        state.lng = rightClickLatLng.value.lng
       }
     }
   ],
@@ -185,7 +221,6 @@ const placeActions = [
 
 const closeSelectedPlace = () => {
   activeMarker.value.getElement()?.classList.replace('text-green-500', 'text-slate-700')
-
   selectedPlace.value = null;
 }
 
@@ -220,11 +255,11 @@ const deleteClick = () => {
     <template #body>
       <p class="text-sm text-wrap break-words">{{selectedPlace.description}}</p>
 
-      <div class="flex gap-2 flex-wrap">
+      <div v-if="selectedPlace.tags.length" class="flex gap-2 flex-wrap">
         <UBadge v-for="tag in selectedPlace.tags" size="md" color="success" variant="outline">{{ tag }}</UBadge>
       </div>
 
-      <div class="grid grid-cols-3 gap-2">
+      <div v-if="selectedPlace.images.length" class="grid grid-cols-3 gap-2">
         <template :key="img.id" v-for="img in selectedPlace.images">
           <GalleryImage :img="img" hide-delete></GalleryImage>
         </template>
@@ -269,6 +304,31 @@ const deleteClick = () => {
       <UContextMenu :items="contextItems">
         <div id="map" class="w-full h-full"></div>
       </UContextMenu>
+
+      <UModal v-model:open="addPlaceModalOpen" title="Add new place here" :ui="{ footer: 'justify-end' }">
+        <template #body>
+          <UForm ref="form" id="add-place-map-form" :schema="placeSchema" :state="state" class="w-full" @submit="onSubmit">
+            <div class="space-y-4 p-2">
+              <UFormField label="Name" name="name">
+                <UInput size="xl" v-model="state.name" class="w-full"/>
+              </UFormField>
+              <UFormField label="Description" name="description">
+                <UTextarea size="xl" v-model="state.description" class="w-full"/>
+              </UFormField>
+              <UFormField label="Tags" name="tags">
+                <UInputMenu size="xl" v-model="state.tags" multiple :items="tags"  class="w-full"/>
+              </UFormField>
+              <div class="text-xs text-muted">
+                Coords: {{ rightClickLatLng?.lat?.toFixed?.(5) }}, {{ rightClickLatLng?.lng?.toFixed?.(5) }}
+              </div>
+            </div>
+          </UForm>
+        </template>
+        <template #footer="{ close }">
+          <UButton label="Cancel" color="neutral" variant="outline" @click="close" />
+          <UButton form="add-place-map-form" icon="i-lucide-save" @click="form.submit()">Save</UButton>
+        </template>
+      </UModal>
     </template>
   </UDashboardPanel>
 </template>

@@ -43,5 +43,5 @@ export default defineEventHandler(async (event) => {
       .where(inArray(uploads.id, body.uploadIds))
   }
 
-  return {}
+  return {id: place.id}
 })

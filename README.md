@@ -77,6 +77,6 @@ TODO:
 - [x] fix table list descriptions width
 - [x] delete from map
 - [x] view on googlemaps button
-- [] Add directly on map
+- [x] Add directly on map
 - [] Cloudflare images
 - [] Place action dropdown
