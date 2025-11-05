@@ -46,11 +46,7 @@ const deletePlaceImage = async () => {
 
   <UModal v-model:open="showPreviewModal" :content="{ class: 'rounded-none ring-0' }">
     <template #content>
-      <NuxtImg
-        :src="img.url"
-        class="object-contain"
-        loading="lazy"
-      />
+      <img :src="img.url" class="object-contain" loading="lazy"/>
     </template>
   </UModal>
 </template>
