@@ -3,8 +3,8 @@ import { ref, onMounted } from 'vue'
 import 'leaflet/dist/leaflet.css';
 
 const places = ref<Place[]>([])
-const types = ['Not shot yet', 'Favourites', 'Easy', 'Hiking required', 'Quick shoots']
-const type = ref(types[1]);
+const types = ['All', 'Not shot yet', 'Favourites', 'Easy', 'Hiking required', 'Quick shoots']
+const type = ref('All');
 const rightClickLatLng = ref(null);
 const map = ref(null);
 const selectedPlace = ref(null);
@@ -66,8 +66,14 @@ onMounted(async () => {
 
   places.value = await $fetch('/api/places')
 
+  const filteredPlaces = computed(() => {
+    if (type.value === 'All') return places.value
+    return places.value.filter(p => Array.isArray(p.tags) && p.tags.includes(type.value))
+  })
+
   watchEffect(() => {
-    for (const place of places.value) {
+    // Add markers for filtered places not yet on the map
+    for (const place of filteredPlaces.value) {
       if (!place.lat || !place.lng) continue
       if (markers.has(place.id)) continue
 
@@ -85,9 +91,15 @@ onMounted(async () => {
       })
     }
 
-    // remove markers for deleted places
+    // Remove markers for places that are no longer in filtered results or were deleted
+    const filteredIds = new Set(filteredPlaces.value.map(p => p.id))
     for (const [id, marker] of markers.entries()) {
-      if (!places.value.find(p => p.id === id)) {
+      if (!filteredIds.has(id)) {
+        // If we are closing a currently selected place because it got filtered out
+        if (selectedPlace.value && selectedPlace.value.id === id) {
+          activeMarker.value?.getElement()?.classList.replace('text-green-500', 'text-slate-700')
+          selectedPlace.value = null
+        }
         marker.remove()
         markers.delete(id)
       }
@@ -206,10 +218,16 @@ const deleteClick = () => {
       </UDashboardNavbar>
     </template>
     <template #body>
-      <p class="text-sm">{{selectedPlace.description}}</p>
+      <p class="text-sm text-wrap break-words">{{selectedPlace.description}}</p>
 
       <div class="flex gap-2 flex-wrap">
         <UBadge v-for="tag in selectedPlace.tags" size="md" color="success" variant="outline">{{ tag }}</UBadge>
+      </div>
+
+      <div class="grid grid-cols-3 gap-2">
+        <template :key="img.id" v-for="img in selectedPlace.images">
+          <GalleryImage :img="img" hide-delete></GalleryImage>
+        </template>
       </div>
 
       <UNavigationMenu

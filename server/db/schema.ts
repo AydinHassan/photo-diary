@@ -10,3 +10,18 @@ export const places = sqliteTable('places', {
   lat: real('lat'),
   lng: real('lng')
 })
+
+export const uploads = sqliteTable('uploads', {
+  id: text('id').primaryKey(),
+  key: text('key').notNull(),
+  userId: text('user_id').notNull(),
+  temporary: integer('temporary', { mode: 'boolean' })
+    .notNull()
+    .default(true),
+  createdAt: text('created_at').notNull(),
+  committedAt: text('committed_at'),
+  placeId: integer('place_id'),
+}, (t) => ({
+  keyUnique: uniqueIndex('idx_uploads_key').on(t.key),
+  tmpCreatedIdx: index('idx_uploads_tmp_created').on(t.temporary, t.createdAt),
+}))

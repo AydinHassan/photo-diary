@@ -1,6 +1,12 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
-  modules: ['@nuxt/eslint', '@nuxt/ui', 'nuxt-auth-utils', 'nitro-cloudflare-dev'],
+  modules: [
+    '@nuxt/eslint',
+    '@nuxt/ui',
+    'nuxt-auth-utils',
+    'nitro-cloudflare-dev',
+    '@nuxt/image'
+  ],
 
   runtimeConfig: {
     oauth: {

@@ -64,9 +64,12 @@ TODO:
 - [x] Delete places
 - [] Fix reset zoom when manually zooming map
 - [x] Better pin on map/selected pin styling
-- [] Filter map by tags
-- [] Filter place list by tabs
-- [] Image upload
+- [x] Filter map by tags
+- [x] Filter place list by tabs
+- [x] Image upload
+- [x] delete images
+- [x] add new images
+- [x] show images on map
 - [x] GitHub name fallback
 - [x] Notifications top middle
 - [] Googlemap search
@@ -75,3 +78,4 @@ TODO:
 - [x] delete from map
 - [x] view on googlemaps button
 - [] Add directly on map
+- [] Cloudflare images

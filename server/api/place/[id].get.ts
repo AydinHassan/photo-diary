@@ -1,6 +1,6 @@
 import { drizzle } from 'drizzle-orm/d1'
 import { eq, and } from 'drizzle-orm'
-import { places } from '../../db/schema'
+import { places, uploads } from '../../db/schema'
 
 export default defineEventHandler(async (event) => {
   const session = await getUserSession(event)
@@ -16,5 +16,11 @@ export default defineEventHandler(async (event) => {
     ))
     .limit(1)
 
-  return place || null
+  if (!place) {
+    throw createError({ statusCode: 404, statusMessage: 'Place not found' })
+  }
+
+  const images = await db.select().from(uploads).where(eq(uploads.placeId, id))
+
+  return { ...place, images }
 })

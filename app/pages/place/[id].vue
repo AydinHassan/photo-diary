@@ -17,8 +17,8 @@ const toast = useToast()
 const route = useRoute()
 const { deletePlace } = useDeletePlace();
 
-const { data: place, status } = await useFetch<Place>('/api/place/' + route.params.id , {
-})
+const { data: fetchedPlace } = await useFetch<Place>('/api/place/' + route.params.id)
+const place = reactive(fetchedPlace.value!)
 
 const tags = ['Not shot yet', 'Favourites', 'Easy', 'Hiking required', 'Quick shoots']
 
@@ -33,12 +33,12 @@ const state = reactive<Partial<PlaceSchema>>({
 })
 
 watchEffect(() => {
-  if (place.value) {
-    state.name = place.value.name
-    state.description = place.value.description
-    state.tags = [...place.value.tags]
-    state.lat = place.value.lat
-    state.lng = place.value.lng
+  if (place) {
+    state.name = place.name
+    state.description = place.description
+    state.tags = [...place.tags]
+    state.lat = place.lat
+    state.lng = place.lng
   }
 })
 
@@ -72,6 +72,63 @@ const deleteClick = () => {
     }
   });
 }
+
+const uploading = ref([])
+
+function onSelectFiles(e: Event) {
+  const list = (e.target as HTMLInputElement).files
+  if (!list) {
+    return
+  }
+
+  const picked = Array.from(list)
+
+  for (const file of picked) {
+    if (uploading.value.some(u => u.file === file)) continue
+    const preview = URL.createObjectURL(file)
+    const item = reactive({ file, preview, progress: 0 })
+    uploading.value.push(item)
+
+    uploadFile(item)
+  }
+
+  // allow re-selecting the same files next time
+  ;(e.target as HTMLInputElement).value = ''
+}
+
+async function uploadFile(item) {
+  const xhr = new XMLHttpRequest()
+  const form = new FormData()
+  form.append('file', item.file)
+
+  xhr.upload.onprogress = (e) => {
+    if (e.lengthComputable) {
+      item.progress = Math.round((e.loaded / e.total) * 100)
+    }
+  }
+
+  xhr.onload = () => {
+    try {
+      const res = JSON.parse(xhr.responseText)
+      if (res.image) {
+        item.progress = 100
+
+        uploading.value = uploading.value.filter(u => u !== item)
+        place.images.unshift(res.image)
+      }
+    } catch (err) {
+      console.error('Invalid upload response:', xhr.responseText)
+    }
+  }
+
+  xhr.onerror = () => {
+    console.error('Upload failed:', item.file.name)
+  }
+
+  xhr.open('POST', `/api/place/${place.id}/upload`)
+  xhr.send(form)
+}
+
 </script>
 
 <template>
@@ -93,27 +150,52 @@ const deleteClick = () => {
 
     <template #body>
       <UForm ref="form" :schema="placeSchema" :state="state" class="w-full" @submit="onSubmit" :errors="formErrors">
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <UFormField label="Name" name="name" class="col-span-1">
-            <UInput size="xl" v-model="state.name" class="w-full"/>
-          </UFormField>
-
-          <UFormField label="Description" name="description" class="col-start-1 col-span-1">
-            <UTextarea size="xl" v-model="state.description" class="w-full"/>
-          </UFormField>
-
-          <UFormField label="Tags" name="tags" class="col-start-1 col-span-1">
-            <UInputMenu size="xl" v-model="state.tags" multiple :items="tags"  class="w-full"/>
-          </UFormField>
-
-          <div class="flex gap-2 col-start-1 col-span-1">
-            <UFormField label="Latitude" name="lat" class="w-1/2">
-              <UInput size="xl" v-model.number="state.lat" type="number" step="0.000001" class="w-full"/>
+        <div class="flex w-full gap-4">
+          <div class="flex flex-col w-full lg:w-1/2 gap-4">
+            <UFormField label="Name" name="name" class="col-span-1">
+              <UInput size="xl" v-model="state.name" class="w-full"/>
             </UFormField>
 
-            <UFormField label="Longitude" name="lng" class="w-1/2">
-              <UInput size="xl" v-model.number="state.lng" type="number" step="0.000001" class="w-full" />
+            <UFormField label="Description" name="description" class="col-start-1 col-span-1">
+              <UTextarea size="xl" v-model="state.description" class="w-full"/>
             </UFormField>
+
+            <UFormField label="Tags" name="tags" class="col-start-1 col-span-1">
+              <UInputMenu size="xl" v-model="state.tags" multiple :items="tags"  class="w-full"/>
+            </UFormField>
+
+            <div class="flex gap-2 col-start-1 col-span-1">
+              <UFormField label="Latitude" name="lat" class="w-1/2">
+                <UInput size="xl" v-model.number="state.lat" type="number" step="0.000001" class="w-full"/>
+              </UFormField>
+
+              <UFormField label="Longitude" name="lng" class="w-1/2">
+                <UInput size="xl" v-model.number="state.lng" type="number" step="0.000001" class="w-full" />
+              </UFormField>
+            </div>
+          </div>
+          <div class="flex flex-col w-full  lg:w-1/2 gap-4">
+            <div class="grid grid-cols-3 gap-2 mt-6">
+              <label class="aspect-square flex items-center justify-center rounded-md cursor-pointer border border-dashed border-success bg-default hover:bg-elevated/25 transition-[background]">
+                <input type="file" accept="image/*" multiple class="hidden" @change="onSelectFiles" />
+                <span class="inline-flex items-center justify-center select-none rounded-full align-middle bg-elevated size-8 text-base shrink-0"><span class="iconify i-lucide:plus text-muted shrink-0" aria-hidden="true"></span></span></label>
+              <div
+                v-for="(item, i) in uploading"
+                :key="'upload-' + i"
+                class="aspect-square relative rounded overflow-hidden"
+              >
+                <img :src="item.preview" class="object-cover w-full h-full" />
+                <div  v-if="item.progress < 100" class="absolute inset-0 bg-black/40 flex items-center justify-center rounded">
+                  <div class="relative w-12 h-12">
+                    <svg viewBox="0 0 36 36" class="w-full h-full -rotate-90">
+                      <circle cx="18" cy="18" r="16" stroke="rgba(255,255,255,0.2)" stroke-width="3" fill="none"/>
+                      <circle cx="18" cy="18" r="16" stroke="white" stroke-width="3" fill="none" stroke-linecap="round" stroke-dasharray="100" :stroke-dashoffset="100 - item.progress" class="transition-all duration-200"/>
+                    </svg>
+                  </div>
+                </div>
+              </div>
+              <GalleryImage v-for="img in place.images" :key="img.id" :img="img" @deleted="place.images = place.images.filter(i => i.id !== $event)"></GalleryImage>
+            </div>
           </div>
         </div>
         <UButton class="mt-8" type="submit" icon="i-lucide-save">Save</UButton>

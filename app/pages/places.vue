@@ -17,6 +17,9 @@ const UCheckbox = resolveComponent('UCheckbox')
 const toast = useToast()
 const table = useTemplateRef('table')
 
+const types = ['All', 'Not shot yet', 'Favourites', 'Easy', 'Hiking required', 'Quick shoots']
+const selectedType = ref<string>('All')
+
 const rowSelection = ref({})
 const { deletePlace } = useDeletePlace()
 
@@ -48,7 +51,7 @@ function getRowItems(row: Row<Place>) {
     {
       label: 'View on map',
       icon: 'i-lucide-map',
-      onSelect: () => navigateTo(`/map?lat=${row.original.lat}&lng=${row.original.lng})}`)
+      onSelect: () => navigateTo(`/map?lat=${row.original.lat}&lng=${row.original.lng}`)
     },
     {
       type: 'separator'
@@ -100,6 +103,16 @@ const columns: TableColumn<Place>[] = [
     }
   },
   {
+    header: 'Image',
+    cell: ({ row }) => {
+      if (row.original.images.length === 0) {
+        return '';
+      }
+
+      return h('img', { class: 'h-20', src:  `/uploads/${row.original.images[0].key}`})
+    }
+  },
+  {
     accessorKey: 'description',
     header: ({ column }) => {
       return h(UButton, {
@@ -114,15 +127,15 @@ const columns: TableColumn<Place>[] = [
   {
     accessorKey: 'tags',
     header: 'Tags',
-    filterFn: 'equals',
+    filterFn: (row, columnId, filterValue) => {
+      if (!filterValue || filterValue === 'All') return true
+      const tags = row.original.tags || []
+      return Array.isArray(tags) && tags.includes(filterValue)
+    },
     cell: ({ row }) => {
-      const color = {
-        subscribed: 'success' as const,
-        unsubscribed: 'error' as const,
-        bounced: 'warning' as const
-      }[row.original.tags] ?? 'success'
+      const color = 'success' as const
 
-      return row.original.tags.map(tag =>
+      return (row.original.tags || []).map(tag =>
         h(UBadge, { class: 'capitalize mr-2', variant: 'subtle', color }, () => tag)
       )
     }
@@ -164,6 +177,17 @@ const pagination = ref({
   pageIndex: 0,
   pageSize: 10
 })
+
+watchEffect(() => {
+  const api = table.value?.tableApi
+  const col = api?.getColumn('tags')
+  if (!col) return
+  if (selectedType.value === 'All') {
+    col.setFilterValue(undefined)
+  } else {
+    col.setFilterValue(selectedType.value)
+  }
+})
 </script>
 
 <template>
@@ -184,15 +208,11 @@ const pagination = ref({
       <div class="flex flex-wrap items-center justify-between gap-1.5">
         <div class="flex flex-wrap items-center gap-1.5">
           <USelect
-            :items="[
-              { label: 'All', value: 'all' },
-              { label: 'Subscribed', value: 'subscribed' },
-              { label: 'Unsubscribed', value: 'unsubscribed' },
-              { label: 'Bounced', value: 'bounced' }
-            ]"
-            :ui="{ trailingIcon: 'group-data-[state=open]:rotate-180 transition-transform duration-200' }"
-            placeholder="Filter status"
-            class="min-w-28"
+            v-model="selectedType"
+            :items="types"
+            class="-ms-1 data-[state=open]:bg-elevated w-[200px]"
+            :ui="{ value: 'capitalize', itemLabel: 'capitalize', trailingIcon: 'group-data-[state=open]:rotate-180 transition-transform duration-200' }"
+            placeholder="Filter by type"
           />
         </div>
       </div>

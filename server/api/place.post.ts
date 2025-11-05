@@ -1,7 +1,8 @@
 import { drizzle } from 'drizzle-orm/d1'
-import { places } from '../db/schema'
+import { places, uploads } from '../db/schema'
 import { placeSchema } from '~/shared/validation/place'
 import { z } from 'zod'
+import { inArray, eq } from 'drizzle-orm'
 
 export default defineEventHandler(async (event) => {
   const session = await getUserSession(event)
@@ -22,7 +23,7 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  await db.insert(places).values({
+  const [place] = await db.insert(places).values({
     name: parsed.data.name,
     description: parsed.data.description || '',
     tags: parsed.data.tags || [],
@@ -30,7 +31,17 @@ export default defineEventHandler(async (event) => {
     lng: parsed.data.lng ?? 0,
     userId: String(session.user.githubId),
     provider: 'github',
-  })
+  }).returning({ id: places.id })
+
+  if (Array.isArray(body.uploadIds) && body.uploadIds.length) {
+    await db.update(uploads)
+      .set({
+        temporary: false,
+        committedAt: new Date().toISOString(),
+        placeId: place.id
+      })
+      .where(inArray(uploads.id, body.uploadIds))
+  }
 
   return {}
 })
