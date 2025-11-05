@@ -1,6 +1,6 @@
 import { drizzle } from 'drizzle-orm/d1'
-import { uploads } from '../../db/schema'
 import { eq } from 'drizzle-orm'
+import { uploads } from '../../db/schema'
 
 export default defineEventHandler(async (event) => {
   const id = getRouterParam(event, 'id')
@@ -9,22 +9,21 @@ export default defineEventHandler(async (event) => {
   }
 
   const db = drizzle(event.context.cloudflare.env.photo_diary)
-  const [record] = await db
-    .select({ key: uploads.key })
-    .from(uploads)
-    .where(eq(uploads.id, id))
-    .limit(1)
-
+  const [record] = await db.select().from(uploads).where(eq(uploads.id, id))
   if (!record) {
     throw createError({ statusCode: 404, statusMessage: 'File not found' })
   }
 
   const r2 = event.context.cloudflare.env.R2
-  try {
-    await r2.delete(record.key)
-  } catch {
-    // noop
+  const file = await r2.get(record.key)
+  if (!file) {
+    throw createError({
+      status: 404,
+      statusMessage: "File not found!",
+    });
   }
 
-  await db.delete(uploads).where(eq(uploads.id, id))
+  setHeaders(event, { etag: file.etag });
+
+  return file.body;
 })

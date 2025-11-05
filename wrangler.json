@@ -1,11 +1,17 @@
 {
-  "name": "photo-diary",
-  "d1_databases": [
-    {
-      "migrations_dir": "db/migrations",
-      "binding": "photo_diary",
-      "database_name": "photo-diary",
-      "database_id": "9deddcbe-af90-48ab-ad83-3f49b7c7293d"
-    }
-  ]
+	"name": "photo-diary",
+	"d1_databases": [
+		{
+			"migrations_dir": "db/migrations",
+			"binding": "photo_diary",
+			"database_name": "photo-diary",
+			"database_id": "9deddcbe-af90-48ab-ad83-3f49b7c7293d"
+		}
+	],
+	"r2_buckets": [
+		{
+			"bucket_name": "photo-diary",
+			"binding": "R2"
+		}
+	]
 }

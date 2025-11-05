@@ -79,3 +79,4 @@ TODO:
 - [x] view on googlemaps button
 - [] Add directly on map
 - [] Cloudflare images
+- [] Place action dropdown

@@ -21,7 +21,10 @@ export default defineEventHandler(async (event) => {
   }
 
   const placeIds = userPlaces.map(p => p.id)
-  const allImages = await db.select().from(uploads).where(inArray(uploads.placeId, placeIds))
+  const allImages = (await db.select().from(uploads).where(inArray(uploads.placeId, placeIds))).map(img => ({
+    ...img,
+    url: getPublicUrl(event, img)
+  }))
 
   const grouped = Object.groupBy(allImages, img => img.placeId)
 

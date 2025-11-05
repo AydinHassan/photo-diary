@@ -104,12 +104,17 @@ const columns: TableColumn<Place>[] = [
   },
   {
     header: 'Image',
+    meta: {
+      class: {
+        td: 'min-w-30',
+      },
+    },
     cell: ({ row }) => {
       if (row.original.images.length === 0) {
         return '';
       }
 
-      return h('img', { class: 'h-20', src:  `/uploads/${row.original.images[0].key}`})
+      return h('img', { class: 'h-20 w-20', src:  row.original.images[0].url})
     }
   },
   {

@@ -20,5 +20,12 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 404, statusMessage: 'Image not found' })
   }
 
+  const r2 = event.context.cloudflare.env.R2
+  try {
+    await r2.delete(upload.key)
+  } catch {
+    //noop
+  }
+
   await db.delete(uploads).where(eq(uploads.id, id))
 })
