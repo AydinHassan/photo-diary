@@ -23,6 +23,7 @@ const place = reactive(fetchedPlace.value!)
 const tags = ['Not shot yet', 'Favourites', 'Easy', 'Hiking required', 'Quick shoots']
 
 const form = ref<any>(null)
+const {updatePlace} = useUpdatePlace()
 
 const state = reactive<Partial<PlaceSchema>>({
   name: '',
@@ -43,22 +44,7 @@ watchEffect(() => {
 })
 
 async function onSubmit(event: FormSubmitEvent<PlaceSchema>) {
-  try {
-    const result = await $fetch('/api/place/' + route.params.id, {
-      method: 'POST',
-      body: event.data,
-      throw: true
-    });
-    toast.add({ title: 'Success', description: 'The place was updated', color: 'success' })
-  } catch (error) {
-    toast.add({ title: 'Failed', description: 'Error saving', color: 'error' })
-    // const errs = error.data?.data?.errors;
-    //
-    // if (Array.isArray(errs) && errs.length) {
-    //   form.value?.setErrors(errs.map(e => ({ name: e.path, message: e.message })))
-    //   return
-    // }
-  }
+  await updatePlace(route.params.id, event.data)
 }
 
 const formErrors = ref<{ name: string; message: string }[]>([])

@@ -62,7 +62,6 @@ Check out the [deployment documentation](https://nuxt.com/docs/getting-started/d
 
 TODO:
 - [x] Delete places
-- [] Fix reset zoom when manually zooming map
 - [x] Better pin on map/selected pin styling
 - [x] Filter map by tags
 - [x] Filter place list by tabs
@@ -72,8 +71,6 @@ TODO:
 - [x] show images on map
 - [x] GitHub name fallback
 - [x] Notifications top middle
-- [] Googlemap search
-- [] Sat view
 - [x] fix table list descriptions width
 - [x] delete from map
 - [x] view on googlemaps button
@@ -81,3 +78,7 @@ TODO:
 - [x] Cloudflare images
 - [x] Place action dropdown
 - [x] Remove home
+- [] Fix reset zoom when manually zooming map
+- [] Googlemap search
+- [] Sat view
+- [x] Drag/move pin

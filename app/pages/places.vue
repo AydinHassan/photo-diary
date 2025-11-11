@@ -13,6 +13,8 @@ const UButton = resolveComponent('UButton')
 const UBadge = resolveComponent('UBadge')
 const UDropdownMenu = resolveComponent('UDropdownMenu')
 const UCheckbox = resolveComponent('UCheckbox')
+const Coordinates = resolveComponent('Coordinates')
+
 
 const toast = useToast()
 const table = useTemplateRef('table')
@@ -148,7 +150,9 @@ const columns: TableColumn<Place>[] = [
   {
     header: 'Lat/Lng',
     cell: ({ row }) => {
-      return row.original.lat + ', ' + row.original.lng;
+      return h(Coordinates, {
+        coords: row.original,
+      })
     }
   },
   {

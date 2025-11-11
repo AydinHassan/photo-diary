@@ -16,6 +16,7 @@ const { deletePlace } = useDeletePlace();
 const tags = ['Not shot yet', 'Favourites', 'Easy', 'Hiking required', 'Quick shoots']
 const form = useTemplateRef('form')
 const toast = useToast()
+const {updatePlace} = useUpdatePlace()
 
 definePageMeta({
   middleware: 'auth',
@@ -68,7 +69,7 @@ onMounted(async () => {
     className: 'text-slate-700'
   });
 
-  places.value = await $fetch('/api/places')
+  places.value = (await $fetch('/api/places')).map((place) => ({...place, locked: true, isDirty: false}))
 
   const filteredPlaces = computed(() => {
     if (type.value === 'All') return places.value
@@ -81,7 +82,7 @@ onMounted(async () => {
       if (!place.lat || !place.lng) continue
       if (markers.has(place.id)) continue
 
-      const marker = L.marker([place.lat, place.lng], { icon: pinIcon }).addTo(map.value)
+      const marker = L.marker([place.lat, place.lng], { icon: pinIcon, draggable: false }).addTo(map.value)
       markers.set(place.id, marker)
 
       marker.on('click', () => {
@@ -92,6 +93,14 @@ onMounted(async () => {
         selectedPlace.value = place
         placeModalOpen.value = true
         marker.getElement()?.classList.replace('text-slate-700', 'text-green-500')
+      })
+
+      marker.on('dragend', (e) => {
+        const { lat, lng } = e.target.getLatLng()
+        place.lat = lat
+        place.lng = lng
+
+        selectedPlace.value.isDirty = true;
       })
     }
 
@@ -114,6 +123,21 @@ onMounted(async () => {
     rightClickLatLng.value = e.latlng
   })
 })
+
+watch(
+  () => selectedPlace.value?.locked,
+  (locked) => {
+    if (!selectedPlace.value) return
+    const marker = markers.get(selectedPlace.value.id)
+    if (marker) {
+      if (locked) {
+        marker.dragging.disable()
+      } else {
+        marker.dragging.enable()
+      }
+    }
+  }
+)
 
 const items = [[{
   label: 'Add place',
@@ -182,22 +206,11 @@ const contextItems = ref([
       kbds: ['shift', 'meta', 'd']
     },
   ],
-  [
-    {
-      label: 'Refresh the Page'
-    },
-    {
-      label: 'Clear Cookies and Refresh'
-    },
-    {
-      label: 'Clear Cache and Refresh'
-    },
-  ]
 ])
 
 const placeActions = [
     {
-      label: 'View place',
+      label: 'Edit place',
       icon: 'i-lucide-pencil',
       onSelect: () => {
         navigateTo(`/place/${selectedPlace.value.id}`)
@@ -234,6 +247,12 @@ const deleteClick = () => {
     }
   });
 }
+
+const update = () => {
+  updatePlace(selectedPlace.value.id, selectedPlace.value);
+
+  selectedPlace.value.isDirty = false;
+}
 </script>
 
 <template>
@@ -253,7 +272,11 @@ const deleteClick = () => {
       </UDashboardNavbar>
     </template>
     <template #body>
-      <p class="text-sm text-wrap break-words">{{selectedPlace.description}}</p>
+      <div class="flex justify-between items-start">
+        <p class="text-sm text-wrap break-words">{{selectedPlace.description}}</p>
+        <UButton v-if="selectedPlace.locked" @click="selectedPlace.locked = false" icon="i-lucide-lock" size="xs" color="error" variant="ghost" />
+        <UButton v-else icon="i-lucide-unlock" @click="selectedPlace.locked = true" size="xs" color="warning" variant="ghost" />
+      </div>
 
       <div v-if="selectedPlace.tags.length" class="flex gap-2 flex-wrap">
         <UBadge v-for="tag in selectedPlace.tags" size="md" color="success" variant="outline">{{ tag }}</UBadge>
@@ -272,6 +295,11 @@ const deleteClick = () => {
         tooltip
         popover
       />
+      <Coordinates :coords="selectedPlace"></Coordinates>
+
+      <div v-if="selectedPlace.isDirty" class="flex border-t border-default">
+        <UButton @click="update" variant="soft" class="mt-4">Save</UButton>
+      </div>
     </template>
   </UDashboardPanel>
   <UDashboardPanel>
@@ -318,9 +346,7 @@ const deleteClick = () => {
               <UFormField label="Tags" name="tags">
                 <UInputMenu size="xl" v-model="state.tags" multiple :items="tags"  class="w-full"/>
               </UFormField>
-              <div class="text-xs text-muted">
-                Coords: {{ rightClickLatLng?.lat?.toFixed?.(5) }}, {{ rightClickLatLng?.lng?.toFixed?.(5) }}
-              </div>
+              <Coordinates :coords="rightClickLatLng" with-label/>
             </div>
           </UForm>
         </template>
