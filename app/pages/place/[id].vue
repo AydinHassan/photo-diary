@@ -220,8 +220,8 @@ const items = ref<DropdownMenuItem[]>([
                    @dragleave="onDragLeave"
                 >
                 <input type="file" accept="image/*" multiple class="hidden" @change="onSelectFiles" />
-                <span class="inline-flex items-center justify-center select-none rounded-full align-middle bg-elevated size-8 text-base shrink-0">
-                  <span class="iconify i-lucide:plus text-muted shrink-0" aria-hidden="true"></span>
+                <span class="inline-flex items-center justify-center select-none rounded-full align-middle bg-elevated size-8">
+                    <UIcon name="i-lucide-plus" class="size-5 text-muted" />
                 </span>
               </label>
               <div
