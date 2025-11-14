@@ -82,3 +82,4 @@ TODO:
 - [] Googlemap search
 - [] Sat view
 - [x] Drag/move pin
+- [x] Drag drop image edit place

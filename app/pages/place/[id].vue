@@ -58,27 +58,47 @@ const deleteClick = () => {
   });
 }
 
+const dragging = ref(false)
+
+function onDragOver(e: DragEvent) {
+  e.preventDefault()
+  dragging.value = true
+}
+
+function onDragLeave() {
+  dragging.value = false
+}
+
+function onDropFiles(e: DragEvent) {
+  const files = e.dataTransfer?.files
+  if (files && files.length) {
+    handleFiles(files)
+  }
+}
+
 const uploading = ref([])
 
 function onSelectFiles(e: Event) {
-  const list = (e.target as HTMLInputElement).files
-  if (!list) {
-    return
+  const input = e.target as HTMLInputElement
+  if (input.files?.length) {
+    handleFiles(input.files)
+    input.value = ''
   }
+}
 
-  const picked = Array.from(list)
-
-  for (const file of picked) {
+function handleFiles(list: FileList) {
+  for (const file of Array.from(list)) {
     if (uploading.value.some(u => u.file === file)) continue
-    const preview = URL.createObjectURL(file)
-    const item = reactive({ file, preview, progress: 0 })
-    uploading.value.push(item)
 
+    const item = reactive({
+      file,
+      preview: URL.createObjectURL(file),
+      progress: 0
+    })
+
+    uploading.value.push(item)
     uploadFile(item)
   }
-
-  // allow re-selecting the same files next time
-  ;(e.target as HTMLInputElement).value = ''
 }
 
 async function uploadFile(item) {
@@ -193,9 +213,17 @@ const items = ref<DropdownMenuItem[]>([
           </div>
           <div class="flex flex-col w-full  lg:w-1/2 gap-4">
             <div class="grid grid-cols-3 gap-2 mt-6">
-              <label class="aspect-square flex items-center justify-center rounded-md cursor-pointer border border-dashed border-success bg-default hover:bg-elevated/25 transition-[background]">
+              <label class="aspect-square flex items-center justify-center rounded-md cursor-pointer border border-dashed border-success bg-default hover:bg-elevated/25 transition-[background]"
+                   :class="dragging ? 'bg-elevated/25' : ''"
+                   @drop.prevent="onDropFiles"
+                   @dragover="onDragOver"
+                   @dragleave="onDragLeave"
+                >
                 <input type="file" accept="image/*" multiple class="hidden" @change="onSelectFiles" />
-                <span class="inline-flex items-center justify-center select-none rounded-full align-middle bg-elevated size-8 text-base shrink-0"><span class="iconify i-lucide:plus text-muted shrink-0" aria-hidden="true"></span></span></label>
+                <span class="inline-flex items-center justify-center select-none rounded-full align-middle bg-elevated size-8 text-base shrink-0">
+                  <span class="iconify i-lucide:plus text-muted shrink-0" aria-hidden="true"></span>
+                </span>
+              </label>
               <div
                 v-for="(item, i) in uploading"
                 :key="'upload-' + i"
